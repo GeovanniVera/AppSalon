@@ -19,8 +19,10 @@ package-lock.json
 /composer/
 
 # Ignorar archivos temporales del sistema operativo (Mac, Windows)
-.DS_Store   # macOS
-Thumbs.db   # Windows
+.DS_Store   
+# macOS
+Thumbs.db   
+# Windows
 
 # Ignorar archivos de log
 *.log
