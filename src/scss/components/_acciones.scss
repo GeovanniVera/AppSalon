@@ -1,0 +1,17 @@
+@use 'base/variables' as v;
+@use 'base/mixins' as m;
+.acciones{
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    text-align: center;
+    a{
+        color: gray;
+        text-decoration: none;
+        &:hover{
+            color: v.$blanco;
+            transition: ease-in-out all  0.5ms;
+
+        }
+    }
+}

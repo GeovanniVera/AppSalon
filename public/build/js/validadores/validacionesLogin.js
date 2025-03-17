@@ -1,0 +1,1 @@
+import{validarVacio}from"./validaciones.js";export function validarEmail(a){return/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(a)}export function validarPassword(a){return!validarVacio(a)}export function validarFormulario(a,r){return validarEmail(a)&&validarPassword(r)}

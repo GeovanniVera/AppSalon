@@ -1,0 +1,1 @@
+export function validarFormatoAlfabetico(t){return/^[A-Za-záéíóúÁÉÍÓÚñÑüÜ]+(?: [A-Za-záéíóúÁÉÍÓÚñÑüÜ]+)*$/.test(t.trim())}export function validarVacio(t){return""===t.trim()}

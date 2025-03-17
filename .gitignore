@@ -1,0 +1,51 @@
+#Logs
+/storage/logs/*
+/logs/*
+#files
+package-lock.json
+# Ignorar la carpeta de dependencias de Composer (se genera automáticamente).
+/vendor/
+#Ignora la carpeta node modules
+/node_modules/
+# Ignorar los archivos de configuración de Composer generados automáticamente
+/composer.lock
+# Ignorar archivos de configuración específicos del entorno (pueden variar según tu entorno de desarrollo)
+*.env
+.env.*
+.env.local
+.env.*.local
+
+# Ignorar el directorio de caché de Composer
+/composer/
+
+# Ignorar archivos temporales del sistema operativo (Mac, Windows)
+.DS_Store   # macOS
+Thumbs.db   # Windows
+
+# Ignorar archivos de log
+*.log
+
+# Ignorar archivos de configuración de IDE (PHPStorm, VSCode, etc.)
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Ignorar archivos de compilación (dependiendo de tu entorno)
+*.phar
+*.tar.gz
+*.zip
+*.tar
+
+# Ignorar archivos de configuración de PHPUnit (si no son necesarios)
+phpunit.xml
+phpunit.xml.dist
+
+# Ignorar archivos de caché de frameworks
+/cache/
+
+# Ignorar archivos de backups y temporales generados por editores
+*.swp
+*~.nib
+*.bak
+*.tmp
