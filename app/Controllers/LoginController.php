@@ -1,12 +1,24 @@
 <?php
 
 namespace App\controllers;
-
+use App\Classes\Session;
 use MVC\Router;
 
 class LoginController{
     public static function login(Router $router){
-        $router->render('auth/login',[]);
+        $data = [];
+
+        if (Session::has('errores')) {
+            $data['errores'] = Session::get('errores');
+            Session::delete('errores');
+        }
+
+        if (Session::has('exitos')) {
+            $data['exitos'] = Session::get('exitos');
+            Session::delete('exitos');
+        }
+
+        $router->render('auth/login',$data);
     }   
 
     public static function loginProcess(){

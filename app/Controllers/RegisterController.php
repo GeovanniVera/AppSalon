@@ -2,9 +2,11 @@
 
 namespace App\controllers;
 
+use App\Classes\Email;
+use App\Classes\Validators;
+use App\Classes\Session;
 use MVC\Router;
 use App\Models\Usuario;
-use App\Includes\Session;
 
 class RegisterController
 {
@@ -15,7 +17,14 @@ class RegisterController
      */
     public static function register(Router $router)
     {
-        $router->render('auth/register', []);
+        $data = [];
+
+        if (Session::has('errores')) {
+            $data['errores'] = Session::get('errores');
+            Session::delete('errores');
+        }
+
+        $router->render('auth/register', $data);
     }
 
     /**
@@ -23,9 +32,10 @@ class RegisterController
      *
      * Este método maneja la lógica para guardar o actualizar un usuario en la base de datos.
      * Primero, obtiene los datos del formulario, los valida y los sanitiza. Luego, crea una
-     * instancia de la clase Usuario, asigna los valores y llama al método save() para
-     * guardar o actualizar el registro. Finalmente, maneja el resultado y muestra un mensaje
-     * apropiado.
+     * instancia de la clase Usuario,revisa que no exista un usuario registrado llamando el metdodo findBy, 
+     * asigna los valores y llama al método save() para guardar o actualizar el registro. 
+     * Finalmente mmaneja el resultado instancia un objeto de la clase Email y ejecuta el metodo enviar confirmacion,
+     * setea un mensaje apropiado y redirecciona a login.
      */
     public static function saveUser()
     {
@@ -34,9 +44,10 @@ class RegisterController
 
             Session::start();
 
-            if(!isset($_POST['id']) ||$_POST['id'] == '' ){
+            if (!isset($_POST['id']) || $_POST['id'] == '') {
                 $id = null;
             }
+            
             $userData = [
                 'id' => $id, // Obtener el ID si existe (para actualizar).
                 'nombre' => $_POST['name'],
@@ -45,13 +56,15 @@ class RegisterController
                 'telefono' => $_POST['phone'],
                 'contraseña' => $_POST['password']
             ];
-            
+
+
             // 2. Validar datos.
             $errores = self::validarDatos($userData);
+
             if (!empty($errores)) {
-                echo "Error al guardar el usuario: " . implode(', ', $errores);
-                header('Location: /');
-                return;
+                Session::set('errores', $errores);
+                header('Location: /register');
+                exit;
             }
 
             // 3. Sanitizar datos.
@@ -61,26 +74,25 @@ class RegisterController
             $user = self::InstanceModel($userData);
 
             //valida que no exista en la base de datos.
-            if(Usuario::findBy($user->getEmail(),'email')){
-                Session::set('errores','El usuario ya esta registrado');
-                header('Location: /');
-                return;
+            if (Usuario::findBy($user->getEmail(), 'email')) {
+                Session::set('errores', ['ⓘ El usuario ya esta registrado']);
+                header('Location: /register');
+                exit;
             }
-            // 5. Llamar a la función save() para guardar o actualizar el registro.
+            // 6. Llamar a la función save() para guardar o actualizar el registro.
             $resultado = $user->save();
-
-            // 6. Manejar el resultado.
+            // 7. Manejar el resultado.
             if ($resultado['resultado']) {
-                if (isset($resultado['id'])) {
-                    echo "Usuario creado con éxito. ID: " . $resultado['id'];
-                } else {
-                    echo "Usuario actualizado con éxito. Filas afectadas: " . $resultado['filas_afectadas'];
-                }
-            } else {
-                echo "Error al guardar el usuario. Error: " . $resultado['error'];
+                $email = new Email($user->getEmail(), $user->getNombre(), $user->getToken());
+                $email->enviarconfirmacion();
+                Session::set('exitos', ["Usuario {$user->getEmail()} creado correctamente"]);
+                header('Location: /');
+                exit;
             }
         }
     }
+
+    public static function confirmAccount() {}
 
     /**
      * Sanitiza los datos del usuario.
@@ -91,20 +103,21 @@ class RegisterController
      * @param array $userData Los datos del usuario.
      * @return array Los datos del usuario sanitizados.
      */
-    private static function sanitizateData($userData) {
+    private static function sanitizateData($userData)
+    {
         foreach ($userData as $key => $value) {
             // Sanitización general
-            $sanitizedValue = $value !== null 
-                ? htmlspecialchars(trim($value), ENT_QUOTES, 'UTF-8') 
+            $sanitizedValue = $value !== null
+                ? htmlspecialchars(trim($value), ENT_QUOTES, 'UTF-8')
                 : null;
-    
+
             // Sanitización especial para 'id'
             if ($key === 'id') {
-                $sanitizedValue = ($sanitizedValue !== null && $sanitizedValue !== '') 
+                $sanitizedValue = ($sanitizedValue !== null && $sanitizedValue !== '')
                     ? (int) $sanitizedValue  // Convertir a entero
                     : null;
             }
-    
+
             $userData[$key] = $sanitizedValue;
         }
         return $userData;
@@ -127,6 +140,7 @@ class RegisterController
         $user->setEmail($userData['email']);
         $user->setTelefono($userData['telefono']);
         $user->setContraseña($userData['contraseña']); // Hash de la contraseña.
+        $user->setToken();
         return $user;
     }
 
@@ -139,18 +153,22 @@ class RegisterController
     private static function validarDatos($userData)
     {
         $errores = [];
-        if (empty($userData['nombre'])) {
-            $errores[] = "El nombre es obligatorio.";
-        }
-        if (empty($userData['apellido'])) {
-            $errores[] = "El apellido es obligatorio.";
-        }
-        if (empty($userData['email']) || !filter_var($userData['email'], FILTER_VALIDATE_EMAIL)) {
-            $errores[] = "El email no es válido.";
-        }
-        if (empty($userData['contraseña'])) {
-            $errores[] = "La contraseña es obligatoria.";
-        }
-        return $errores;
+
+        // Revisar Vacíos
+        $errores[] = Validators::required($userData['nombre'], 'Nombre');
+        $errores[] = Validators::required($userData['apellido'], 'Apellido');
+        $errores[] = Validators::required($userData['email'], 'Email');
+        $errores[] = Validators::required($userData['contraseña'], 'Contraseña');
+        $errores[] = Validators::required($userData['telefono'], 'Teléfono');
+
+        // Revisar formatos
+        $errores[] = Validators::alfa($userData['nombre'], 'Nombre');
+        $errores[] = Validators::alfa($userData['apellido'], 'Apellido');
+        $errores[] = Validators::email($userData['email'], 'Email');
+        $errores[] = Validators::password($userData['contraseña']);
+        $errores[] = Validators::telefono($userData['telefono']);
+
+        // Filtrar valores vacíos para evitar NULLs en el array
+        return array_filter($errores);
     }
 }

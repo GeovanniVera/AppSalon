@@ -1,5 +1,15 @@
 <h1 class="nombre-pagina">Registra tu Cuenta</h1>
+<?php if(isset($errores) && !empty($errores)) :?>
+    <?php foreach($errores as $error):?>
+        <p class="alerta error"><?php echo $error ?></p>
+    <?php endforeach;?>
+<?php endif; ?>
 
+<?php if(isset($exitos) && !empty($exitos)) :?>
+    <?php foreach($exito as $exito):?>
+        <p class="alerta exito"><?php echo $exito ?></p>
+    <?php endforeach;?>
+<?php endif; ?>
 <form action="/register" class="formulario-registro" method="POST" id="registerForm">
 
     <div class="grupo">

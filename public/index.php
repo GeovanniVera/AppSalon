@@ -23,6 +23,7 @@ $router->post('/recoveryPassword',[LoginController::class,'recoveryPassword']);
 $router->get('/register',[RegisterController::class,'register']);
 $router->post('/register',[RegisterController::class,'saveUser']);
 
-
+//ConfrmarCuenta
+$router->get('/confirmAccount',[RegisterController::class,'confirmAccount']);
 // Comprueba y valida las rutas, que existan y les asigna las funciones del Controlador
 $router->comprobarRutas();

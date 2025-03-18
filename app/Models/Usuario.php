@@ -6,7 +6,7 @@ class Usuario extends ActiveRecord
 {
     // Base de datos
 
-    protected array $atributosExcluir = ['id', 'admin', 'confirmado', 'token', 'estado', 'fecha_de_alta'];
+    protected array $atributosExcluir = ['id', 'admin', 'confirmado', 'estado', 'fecha_de_alta'];
 
     public function __construct()
     {   
@@ -248,12 +248,9 @@ class Usuario extends ActiveRecord
      * @param string $token El token del usuario.
      * @throws \InvalidArgumentException Si el token está vacío.
      */
-    public function setToken($token)
+    public function setToken()
     {
-        if (empty($token)) {
-            throw new \InvalidArgumentException("El token no puede estar vacío.");
-        }
-        $this->token = $token;
+        $this->token = uniqid();
     }
 
     /**

@@ -31,3 +31,14 @@ a {
 img {
     max-width: 100%;
 }
+
+.alerta {
+    font-size: 1.5rem;
+    text-align: center;
+    &.error{
+        color: v.$rojo;
+    }
+    &.exito{
+        color: v.$verde;
+    }
+}

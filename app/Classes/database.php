@@ -1,5 +1,5 @@
 <?php
-namespace App\Includes;
+namespace App\Classes;
 
 class Database {
     private $host = "localhost";

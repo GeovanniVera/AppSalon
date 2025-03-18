@@ -2,6 +2,8 @@
 
 namespace MVC;
 
+use App\Classes\Session;
+
 class Router
 {
     public array $getRoutes = [];
@@ -21,7 +23,7 @@ class Router
     {
         
         // Proteger Rutas...
-        session_start();
+        Session::start();
 
         // Arreglo de rutas protegidas...
         // $rutas_protegidas = ['/admin', '/propiedades/crear', '/propiedades/actualizar', '/propiedades/eliminar', '/vendedores/crear', '/vendedores/actualizar', '/vendedores/eliminar'];

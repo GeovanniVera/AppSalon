@@ -50,5 +50,5 @@ function actualizarEstadoBoton() {
 
 function sonTodosLosCamposValidos() {
     const emailValido = validarEmail(emailInput.value);
-    return  emailValido && passwordValido;
+    return  emailValido;
 }

@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Includes\Database;
+use App\Classes\Database;
 use PDO;
 use PDOException;
 
@@ -107,7 +107,7 @@ class ActiveRecord
 
 
         // Internal properties that should NEVER be in the database
-        $exclusionesInternas = ['atributosExcluir','tabla']; // Add others here if needed
+        $exclusionesInternas = ['atributosExcluir', 'tabla']; // Add others here if needed
 
         // Default exclusions (like 'id') unless $incluirExcluidos is true
         $exclusiones = $incluirExcluidos
@@ -133,7 +133,7 @@ class ActiveRecord
             $atributos[$columna] = $valor;
         }
 
-        
+
 
         return $atributos;
     }
@@ -166,7 +166,7 @@ class ActiveRecord
     public function save()
     {
 
-        $resultado = '';
+        $resultado = [];
         if (!is_null($this->id)) {
             // Actualizar registro existente.
             $resultado = $this->actualizar();
@@ -205,7 +205,7 @@ class ActiveRecord
             if (empty($atributos)) {
                 throw new \RuntimeException("No hay atributos para insertar.");
             }
-            if (empty($this->tabla)) {
+            if (empty(self::$tabla)) {
                 throw new \RuntimeException("La tabla no está definida.");
             }
 
@@ -213,29 +213,30 @@ class ActiveRecord
             $columnas = array_keys($atributos);
             $marcadores = ':' . implode(', :', $columnas);
             $query = "INSERT INTO " . self::$tabla . " (" . implode(', ', $columnas) . ") VALUES ($marcadores)";
-            
+
             // Preparar y vincular
             $stmt = $conn->prepare($query);
             foreach ($atributos as $columna => $valor) {
                 $stmt->bindValue(":$columna", $valor, self::getTipoParametro($valor));
             }
-            
 
+            // Ejecutar y verificar resultado
             if ($stmt->execute()) {
                 $this->id = $conn->lastInsertId();
-                return ['resultado' => true, 'id' => $this->id];
-            }else{
-                echo "Error en SQL: ";
-                print_r($stmt->errorInfo());
-                
+                return ['resultado' => true, 'object' => self::find($this->id)];
+            } else {
+                error_log("Error en la consulta: " . print_r($stmt->errorInfo(), true));
+                return ['resultado' => false, 'error' => $stmt->errorInfo()[2] ?? 'Error desconocido'];
             }
-
-            return ['resultado' => false, 'error' => $stmt->errorInfo()];
         } catch (PDOException $e) {
             error_log("Error PDO: " . $e->getMessage());
             return ['resultado' => false, 'error' => $e->getMessage()];
+        } catch (\RuntimeException $e) {
+            error_log("Error de lógica: " . $e->getMessage());
+            return ['resultado' => false, 'error' => $e->getMessage()];
         }
     }
+
 
     // Método auxiliar para determinar el tipo de parámetro
     private static function getTipoParametro($valor)
@@ -361,50 +362,50 @@ class ActiveRecord
     }
 
     /**
- * Busca un registro en la base de datos en función de un valor y un campo específico.
- *
- * Este método ejecuta una consulta SQL para encontrar un único registro en la tabla asociada a la clase
- * mediante la búsqueda de un valor específico en un campo determinado. Si se encuentra un registro, 
- * lo devuelve como un arreglo asociativo. Si no se encuentra ningún registro, devuelve null. En caso
- * de error durante la ejecución de la consulta, se captura la excepción y se retorna un arreglo con el
- * detalle del error.
- *
- * @param mixed $value El valor a buscar en la base de datos. Puede ser un string, número o cualquier otro tipo
- *                     de dato soportado por la base de datos.
- * @param string $field El nombre del campo en la base de datos en el que se realizará la búsqueda.
- * 
- * @return array|null Si se encuentra un registro, devuelve un arreglo asociativo con los datos del registro.
- *                    Si no se encuentra un registro, devuelve null.
- *                    Si ocurre un error, devuelve un arreglo con el estado `resultado` como `false` 
- *                    y el mensaje de error.
- *
- * @throws PDOException Si ocurre un error en la consulta SQL, el error será registrado y se devuelve un arreglo
- *                      con el detalle del error.
- */
-public static function findBy($value, $field) {
-    try {
-        $query = "SELECT * FROM " . self::$tabla . " WHERE $field = :$field LIMIT 1";
-        $conn = Database::getInstance()->getConnection();
-        $stmt = $conn->prepare($query);
-        $stmt->bindValue(":$field", $value, self::getTipoParametro($value));
-        $stmt->execute();
-        $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
-        
-        // Si se encuentra un resultado, lo devuelve
-        if ($resultado) {
-            return $resultado;
-        }
-        
-        return null;
-        
-    } catch (PDOException $e) {
-        // Si ocurre un error, se registra y se devuelve un arreglo con el error
-        error_log("Error PDO: " . $e->getMessage());
-        return ['resultado' => false, 'error' => $e->getMessage()];
-    }
-}
+     * Busca un registro en la base de datos en función de un valor y un campo específico.
+     *
+     * Este método ejecuta una consulta SQL para encontrar un único registro en la tabla asociada a la clase
+     * mediante la búsqueda de un valor específico en un campo determinado. Si se encuentra un registro, 
+     * lo devuelve como un arreglo asociativo. Si no se encuentra ningún registro, devuelve null. En caso
+     * de error durante la ejecución de la consulta, se captura la excepción y se retorna un arreglo con el
+     * detalle del error.
+     *
+     * @param mixed $value El valor a buscar en la base de datos. Puede ser un string, número o cualquier otro tipo
+     *                     de dato soportado por la base de datos.
+     * @param string $field El nombre del campo en la base de datos en el que se realizará la búsqueda.
+     * 
+     * @return array|null Si se encuentra un registro, devuelve un arreglo asociativo con los datos del registro.
+     *                    Si no se encuentra un registro, devuelve null.
+     *                    Si ocurre un error, devuelve un arreglo con el estado `resultado` como `false` 
+     *                    y el mensaje de error.
+     *
+     * @throws PDOException Si ocurre un error en la consulta SQL, el error será registrado y se devuelve un arreglo
+     *                      con el detalle del error.
+     */
+    public static function findBy($value, $field)
+    {
+        try {
+            $query = "SELECT * FROM " . self::$tabla . " WHERE $field = :$field LIMIT 1";
+            $conn = Database::getInstance()->getConnection();
+            $stmt = $conn->prepare($query);
+            $stmt->bindValue(":$field", $value, self::getTipoParametro($value));
+            $stmt->execute();
+            $resultado = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    
+            // Si se encuentra un resultado, lo devuelve
+            if ($resultado) {
+                return $resultado;
+            }
+
+            return null;
+        } catch (PDOException $e) {
+            // Si ocurre un error, se registra y se devuelve un arreglo con el error
+            error_log("Error PDO: " . $e->getMessage());
+            return ['resultado' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+
 
 
 

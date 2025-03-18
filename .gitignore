@@ -51,3 +51,5 @@ phpunit.xml.dist
 *~.nib
 *.bak
 *.tmp
+
+info.php

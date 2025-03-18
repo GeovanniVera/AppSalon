@@ -1,6 +1,6 @@
 <?php
 
-use App\Includes\Session;
+use App\Classes\Session;
 
 require 'funciones.php';
 require __DIR__ . '/../../vendor/autoload.php';
