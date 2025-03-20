@@ -6,7 +6,7 @@ class Database {
     private $db_name = "APPSALON";//cambia tu base de datos
     private $username = "userappsalon";//cambia tu usuario
     private $password = "appsalonpassword12@";//Cambia tu contraseña
-    private $port = "3307";
+    private $port = "3306";
     
     private \PDO $conn; // Propiedad privada
     private static ?self $instance = null; // PHP 7.4+

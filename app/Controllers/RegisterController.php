@@ -1,12 +1,13 @@
 <?php
 
-namespace App\controllers;
+namespace App\Controllers;
 
 use App\Classes\Email;
+use App\Classes\Middlewares;
 use App\Classes\Validators;
 use App\Classes\Session;
 use MVC\Router;
-use App\Models\Usuario;
+use App\Models\User;
 
 class RegisterController
 {
@@ -41,20 +42,19 @@ class RegisterController
     {
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // 1. Obtener los datos del formulario.
-
+            Middlewares::isAuth();
             Session::start();
-
             if (!isset($_POST['id']) || $_POST['id'] == '') {
                 $id = null;
             }
             
             $userData = [
                 'id' => $id, // Obtener el ID si existe (para actualizar).
-                'nombre' => $_POST['name'],
-                'apellido' => $_POST['last_name'],
+                'name' => $_POST['name'],
+                'last_name' => $_POST['last_name'],
                 'email' => $_POST['email'],
-                'telefono' => $_POST['phone'],
-                'contraseña' => $_POST['password']
+                'phone' => $_POST['phone'],
+                'password' => $_POST['password']
             ];
 
 
@@ -71,28 +71,47 @@ class RegisterController
             $userData = self::sanitizateData($userData);
 
             // 4. Crear una instancia de Usuario.
-            $user = self::InstanceModel($userData);
-
+            $user = User::arrayToObject($userData);
+            $user->generateToken();
+            var_dump($user->getEmail());
+            $isValidEmail= User::where('email',$user->getEmail());
             //valida que no exista en la base de datos.
-            if (Usuario::findBy($user->getEmail(), 'email')) {
-                Session::set('errores', ['ⓘ El usuario ya esta registrado']);
+            if ($isValidEmail) {
+                Session::set('errores', ["ⓘ El usuario {$isValidEmail->getEmail()} ya esta registrado"]);
                 header('Location: /register');
                 exit;
             }
             // 6. Llamar a la función save() para guardar o actualizar el registro.
-            $resultado = $user->save();
+            $resultado = User::save($user);
+
             // 7. Manejar el resultado.
-            if ($resultado['resultado']) {
-                $email = new Email($user->getEmail(), $user->getNombre(), $user->getToken());
+            if ($resultado) {
+                $email = new Email($user->getEmail(), $user->getName(), $user->getToken());
                 $email->enviarconfirmacion();
-                Session::set('exitos', ["Usuario {$user->getEmail()} creado correctamente"]);
+                Session::set('exitos', ["Usuario {$user->getEmail()} creado correctamente verifica tu cuenta desde tu correo"]);
                 header('Location: /');
                 exit;
             }
         }
     }
 
-    public static function confirmAccount() {}
+    public static function confirmAccount() {
+        $token = self::sanitizateData($_GET['token']);
+        $user = User::where('token',$token);
+        if(!$user){
+            Session::set('errores', ["Token Invalido"]);
+                header('Location: /');
+                exit;
+        }
+        $user->setToken(null);
+        $user->setConfirmed(1);
+        $res = $user->save($user);
+        if($res){
+            Session::set('exitos', ["Tu cuenta ha sido confirmada inicia sesion"]);
+                header('Location: /');
+                exit;
+        }
+    }
 
     /**
      * Sanitiza los datos del usuario.
@@ -123,26 +142,6 @@ class RegisterController
         return $userData;
     }
 
-    /**
-     * Crea una instancia de la clase Usuario y asigna los valores.
-     *
-     * @param array $userData Los datos del usuario.
-     * @return Usuario La instancia de la clase Usuario.
-     */
-    private static function InstanceModel($userData)
-    {
-        $user = new Usuario();
-
-        // Asignar los valores a las propiedades del objeto.
-        $user->setId($userData['id'] ?? null); // Asignar el ID si existe.
-        $user->setNombre($userData['nombre']);
-        $user->setApellido($userData['apellido']);
-        $user->setEmail($userData['email']);
-        $user->setTelefono($userData['telefono']);
-        $user->setContraseña($userData['contraseña']); // Hash de la contraseña.
-        $user->setToken();
-        return $user;
-    }
 
     /**
      * Valida los datos del usuario.
@@ -150,23 +149,22 @@ class RegisterController
      * @param array $userData Los datos del usuario.
      * @return array Un array de errores.
      */
-    private static function validarDatos($userData)
+    private static function validarDatos($Data)
     {
         $errores = [];
 
         // Revisar Vacíos
-        $errores[] = Validators::required($userData['nombre'], 'Nombre');
-        $errores[] = Validators::required($userData['apellido'], 'Apellido');
-        $errores[] = Validators::required($userData['email'], 'Email');
-        $errores[] = Validators::required($userData['contraseña'], 'Contraseña');
-        $errores[] = Validators::required($userData['telefono'], 'Teléfono');
+        foreach($Data as $key => $value){
+            if($key == 'id') continue;
+            $errores[] = Validators::required($value, $key);
+        }
 
         // Revisar formatos
-        $errores[] = Validators::alfa($userData['nombre'], 'Nombre');
-        $errores[] = Validators::alfa($userData['apellido'], 'Apellido');
-        $errores[] = Validators::email($userData['email'], 'Email');
-        $errores[] = Validators::password($userData['contraseña']);
-        $errores[] = Validators::telefono($userData['telefono']);
+        $errores[] = Validators::alfa($Data['name'], 'Nombre');
+        $errores[] = Validators::alfa($Data['last_name'], 'Apellido');
+        $errores[] = Validators::email($Data['email'], 'Email');
+        $errores[] = Validators::password($Data['password']);
+        $errores[] = Validators::telefono($Data['phone']);
 
         // Filtrar valores vacíos para evitar NULLs en el array
         return array_filter($errores);

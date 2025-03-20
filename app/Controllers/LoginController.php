@@ -1,11 +1,15 @@
 <?php
 
-namespace App\controllers;
+namespace App\Controllers;
+
+use App\Classes\Middlewares;
 use App\Classes\Session;
 use MVC\Router;
 
 class LoginController{
     public static function login(Router $router){
+        Middlewares::isAuth();
+        
         $data = [];
 
         if (Session::has('errores')) {
@@ -22,11 +26,12 @@ class LoginController{
     }   
 
     public static function loginProcess(){
-        var_dump($_POST);
+        ;
     }
 
     public static function logout(){
-        echo "Cerrando Sesion";
+        Session::destroy();
+        header('Location: /');
     }
     public static function forgetPassword(Router $router){
         $router->render('auth/forget',[]);

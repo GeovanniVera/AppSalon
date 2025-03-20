@@ -2,8 +2,8 @@
 
 require_once __DIR__ . '/../app/Includes/app.php';
 
-use App\controllers\LoginController;
-use App\controllers\RegisterController;
+use App\Controllers\LoginController;
+use App\Controllers\RegisterController;
 use MVC\Router;
 
 $router = new Router();

@@ -1,4 +1,4 @@
-<h1 class="nombre-pagina">Inicia Sesion en App Salon</h1>
+<h1 class="nombre-pagina">Inicia Sesion en Game Hub</h1>
 
 
 <?php if(isset($errores) && !empty($errores)) :?>
