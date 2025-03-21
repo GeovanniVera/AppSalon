@@ -3,12 +3,8 @@ namespace App\Classes;
 
 use App\Classes\Session;
 
-class Middlewares{
-    public static function isAuth(){
-        Session::start();//inicia la sesion si no esta iniciada
-        if(Session::has('user')){
-            header('Location: /dashboard');
-            exit;
-        }
+class Middlewares {
+    public static function isAuth() {
+        // Si el usuario no está autenticado, la ejecución continúa.
     }
 }

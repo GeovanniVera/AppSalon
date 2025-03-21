@@ -173,7 +173,13 @@ class User extends ActiveRecord
     {
         return password_verify($password, $this->password);
     }
-
+    
+    /**
+     * Recupera el password hasheado
+     */
+    public function getPassword(){
+        return $this->password;
+    }
     /**
      * Establece el token único al momento de crear la cuenta
      */

@@ -1,6 +1,4 @@
 <h1 class="nombre-pagina">Inicia Sesion en Game Hub</h1>
-
-
 <?php if(isset($errores) && !empty($errores)) :?>
     <?php foreach($errores as $error):?>
         <p class="alerta error"><?php echo $error ?></p>

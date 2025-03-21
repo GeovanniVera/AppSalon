@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Controllers\BaseController;
 use App\Classes\Email;
 use App\Classes\Middlewares;
 use App\Classes\Validators;
@@ -9,7 +10,7 @@ use App\Classes\Session;
 use MVC\Router;
 use App\Models\User;
 
-class RegisterController
+class RegisterController extends BaseController
 {
     /**
      * Renderiza la vista de registro de usuario.
@@ -113,34 +114,7 @@ class RegisterController
         }
     }
 
-    /**
-     * Sanitiza los datos del usuario.
-     *
-     * Este método utiliza htmlspecialchars() para escapar caracteres especiales y trim() para
-     * eliminar espacios en blanco al principio y al final de cada valor.
-     *
-     * @param array $userData Los datos del usuario.
-     * @return array Los datos del usuario sanitizados.
-     */
-    private static function sanitizateData($userData)
-    {
-        foreach ($userData as $key => $value) {
-            // Sanitización general
-            $sanitizedValue = $value !== null
-                ? htmlspecialchars(trim($value), ENT_QUOTES, 'UTF-8')
-                : null;
-
-            // Sanitización especial para 'id'
-            if ($key === 'id') {
-                $sanitizedValue = ($sanitizedValue !== null && $sanitizedValue !== '')
-                    ? (int) $sanitizedValue  // Convertir a entero
-                    : null;
-            }
-
-            $userData[$key] = $sanitizedValue;
-        }
-        return $userData;
-    }
+    
 
 
     /**
@@ -152,12 +126,8 @@ class RegisterController
     private static function validarDatos($Data)
     {
         $errores = [];
-
-        // Revisar Vacíos
-        foreach($Data as $key => $value){
-            if($key == 'id') continue;
-            $errores[] = Validators::required($value, $key);
-        }
+     
+        $errores[]=self::validarVacios($Data);
 
         // Revisar formatos
         $errores[] = Validators::alfa($Data['name'], 'Nombre');

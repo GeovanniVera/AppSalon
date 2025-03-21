@@ -50,7 +50,7 @@ class ActiveRecord
 
             $resultado = [];
             foreach ($res as $row) {
-                $resultado[] = static::arrayToObject($row);
+                $resultado[] = static::fromDatabase($row);
             }
             return $resultado;
         } catch (PDOException $e) {
@@ -78,7 +78,7 @@ class ActiveRecord
             if ($res) {
                 return null;
             }
-            $resultado = static::arrayToObject($res);
+            $resultado = static::fromDatabase($res);
             return $resultado;
         } catch (PDOException $e) {
             $message = "Error al recuper el registro la base de datos:  {$e->getMessage()} en la linea {$e->getLine()}";
@@ -100,14 +100,14 @@ class ActiveRecord
             $conn = Database::getInstance()->getConnection();
             $stmt = $conn->prepare($query);
             $paramType = static::getValueParam($value);
-            $stmt->bindValue(":$field", $value,$paramType);
+            $stmt->bindValue(":$field", $value, $paramType);
             $stmt->execute();
             $res = $stmt->fetch(PDO::FETCH_ASSOC);
-            if(!$res){
+            if (!$res) {
                 return null;
             }
-            $obj = static::arrayToObject($res);
-            
+            $obj = static::fromDatabase($res);
+
             return $obj;
         } catch (PDOException $e) {
             $message = "Error al recuper el registro la base de datos:  {$e->getMessage()} en la linea {$e->getLine()}";
@@ -125,14 +125,12 @@ class ActiveRecord
      * 
      */
 
-     public static function save(object $model){
-        if(!is_null($model->getId()))
-        {
-           //self::update($model); 
-           return static::update($model);
-        }
-        else
-        {
+    public static function save(object $model)
+    {
+        if (!is_null($model->getId())) {
+            //self::update($model); 
+            return static::update($model);
+        } else {
             //self::create($model);
             return static::create($model);
         }
@@ -167,7 +165,7 @@ class ActiveRecord
         }
     }
 
-   
+
     /**
      * Metodo update -> recibe un objeto modelo y actualiza un registro en la base de datos.
      * @param object $model
@@ -274,6 +272,16 @@ class ActiveRecord
             if (method_exists($model, $setter)) {
                 $model->$setter($value);
             }
+        }
+        return $model;
+    }
+
+    public static function fromDatabase(array $data): object
+    {
+        $model = new static;
+        foreach ($data as $key => $value) {
+            $camelCaseKey = lcfirst(str_replace('_', '', ucwords($key, '_')));
+            $model->$camelCaseKey = $value; // Establecer propiedades directamente
         }
         return $model;
     }
