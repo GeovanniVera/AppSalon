@@ -1,4 +1,4 @@
-<h1 class="nombre-pagina">Inicia Sesion en Game Hub</h1>
+<h1 class="nombre-pagina">Inicia Sesion en App Salon</h1>
 <?php if(isset($errores) && !empty($errores)) :?>
     <?php foreach($errores as $error):?>
         <p class="alerta error"><?php echo $error ?></p>
@@ -11,7 +11,7 @@
     <?php endforeach;?>
 <?php endif; ?>
 
-<form action="/" class="formulario" method="post" id="loginForm">
+<form action="/login" class="formulario" method="post" id="loginForm">
     <div class="campo">
         <label for="email" class="form-label" id="label-email">Correo Electronico:</label>
         <div class="input-container">

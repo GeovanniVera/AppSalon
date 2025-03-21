@@ -198,7 +198,7 @@ class User extends ActiveRecord
     /**
      * Recupera el token para validaciones en el controlador
      */
-    public function getToken(): string
+    public function getToken(): ?string
     {
         return $this->token;
     }
@@ -235,4 +235,5 @@ class User extends ActiveRecord
             throw new InvalidArgumentException("Solo existen los valores 0 y 1");
         }
     }
+
 }

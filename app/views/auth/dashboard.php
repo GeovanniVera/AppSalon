@@ -1,4 +1,4 @@
-<h1 class="nombre-pagina">Hola Bienvenido <?php var_dump($user) ?></h1>
+<h1 class="nombre-pagina">Hola Bienvenido <?php echo $user->getName() ?></h1>
 <?php if(isset($errores) && !empty($errores)) :?>
     <?php foreach($errores as $error):?>
         <p class="alerta error"><?php echo $error ?></p>

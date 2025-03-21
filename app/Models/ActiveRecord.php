@@ -69,13 +69,13 @@ class ActiveRecord
     public static function find(int $id)
     {
         try {
-            $query = "SELECT * FROM " . self::getTable() . " WHERE id = :id";
+            $query = "SELECT * FROM " . static::getTable() . " WHERE id = :id";
             $conn = Database::getInstance()->getConnection();
             $stmt = $conn->prepare($query);
             $stmt->bindValue(':id', $id, PDO::PARAM_INT);
             $stmt->execute();
             $res = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($res) {
+            if (!$res) {
                 return null;
             }
             $resultado = static::fromDatabase($res);
@@ -302,5 +302,23 @@ class ActiveRecord
         } else {
             return PDO::PARAM_STR;
         }
+    }
+
+    public function toJson() {
+        $data = [];
+        foreach ($this as $key => $value) {
+            $getter = 'get' . ucfirst($key); // Crear el nombre del método getter
+
+            if (method_exists($this, $getter)) {
+                $data[$key] = $this->$getter(); // Llamar al método getter si existe
+            } else {
+                $data[$key] = $value; // Usar el valor directamente si no hay getter
+            }
+        }
+        return $data;
+    }
+
+    public function jsonSerialize() {
+        return $this->toJson();
     }
 }
